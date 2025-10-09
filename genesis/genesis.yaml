@@ -1,0 +1,24 @@
+# Build section. It specifies the build process of the project
+build:
+
+  # Dependencies of the project
+  deps:
+      # Target path in the image
+    - dst: /opt/genesis_glitchtip
+      # Local path
+      path:
+        src: ../../genesis_glitchtip
+
+  # List of elements in the project
+  elements:
+    # List of images in the element
+    - images:
+      - name: genesis-glitchtip
+        format: gz
+
+        # Provisioning script
+        script: images/install.sh
+      # manifest: manifests/genesis-core.yaml
+
+        override:
+          disk_size: "6g"
