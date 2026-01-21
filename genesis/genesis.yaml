@@ -8,6 +8,9 @@ build:
       # Local path
       path:
         src: ../../genesis_glitchtip
+    - dst: /var/lib/genesis/bootstrap/scripts/00-glitchtip-bootstrap.sh
+      path:
+        src: ./images/bootstrap.sh
 
   # List of elements in the project
   elements:

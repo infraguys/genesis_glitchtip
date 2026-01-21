@@ -1,13 +1,3 @@
-x-environment: &default-environment
-  DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
-  SECRET_KEY: change_me_to_something_random # best to run openssl rand -hex 32
-  PORT: 80 # If changing, change the web service port too
-  EMAIL_URL: consolemail:// # Example smtp://email:password@smtp_url:port https://glitchtip.com/documentation/install#configuration
-  # TODO: set domain automatically
-  GLITCHTIP_DOMAIN: http://10.130.4.61:8000 # Change this to your domain
-  DEFAULT_FROM_EMAIL: email@example.com # Change this to your email
-  CELERY_WORKER_AUTOSCALE: "1,3" # Scale between 1 and 3 to prevent excessive memory usage. Change it or remove to set it to the number of cpu cores.
-
 x-depends_on: &default-depends_on
   - postgres
   - redis
@@ -28,7 +18,7 @@ services:
     depends_on: *default-depends_on
     ports:
       - "80:80"
-    environment: *default-environment
+    env_file: /etc/default/glitchtip.env
     restart: unless-stopped
     volumes:
       - uploads:/code/uploads
@@ -36,7 +26,7 @@ services:
     image: glitchtip/glitchtip
     command: ./bin/run-celery-with-beat.sh
     depends_on: *default-depends_on
-    environment: *default-environment
+    env_file: /etc/default/glitchtip.env
     restart: unless-stopped
     volumes:
       - uploads:/code/uploads
@@ -44,7 +34,7 @@ services:
     image: glitchtip/glitchtip
     depends_on: *default-depends_on
     command: ./bin/run-migrate.sh
-    environment: *default-environment
+    env_file: /etc/default/glitchtip.env
 
 volumes:
   pg-data:

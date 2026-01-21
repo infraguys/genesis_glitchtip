@@ -1,0 +1,124 @@
+name: "glitchtip"
+uuid: "de662364-d2ad-4d69-ab4b-f89dfb18f5a5"
+description: "Genesis Glitchtip element"
+schema_version: 1
+version: "{{version}}"
+api_version: "v1"
+
+requirements:
+  core:
+    from_version: "0.0.0"
+
+imports:
+  core_public_domain:
+    element: "$core"
+    kind: "resource"
+    link: "$core.dns.domains.$public_domain"
+
+resources:
+  $core.compute.nodes:
+    genesis_glitchtip:
+      name: f"glitchtip.{$glitchtip.imports.$core_public_domain:name}"
+      project_id: "12345678-c625-4fee-81d5-f691897b8142"
+      root_disk_size: 20
+      cores: 4
+      ram: 8000
+      image: https://repository.genesis-core.tech/genesis-glitchtip/{{ version }}/images/genesis-glitchtip.raw.gz
+
+  $core.config.configs:
+    genesis_glitchtip_config:
+      project_id: "12345678-c625-4fee-81d5-f691897b8142"
+      path: /etc/default/glitchtip.env
+      target:
+        kind: node
+        node: $core.compute.nodes.$genesis_glitchtip:uuid
+      body:
+        kind: text
+        content: |
+          f"
+          DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres
+          SECRET_KEY=change_me_to_something_random # best to run openssl rand -hex 32
+          PORT=80 # If changing, change the web service port too
+          EMAIL_URL=consolemail:// # Example smtp://email:password@smtp_url:port https://glitchtip.com/documentation/install#configuration
+          GLITCHTIP_DOMAIN=https://glitchtip.{$glitchtip.imports.$core_public_domain:name}
+          CSRF_TRUSTED_ORIGINS=https://glitchtip.{$glitchtip.imports.$core_public_domain:name}
+          DEFAULT_FROM_EMAIL=email@glitchtip.{$glitchtip.imports.$core_public_domain:name}
+          CELERY_WORKER_AUTOSCALE="1,3" # Scale between 1 and 3 to prevent excessive memory usage. Change it or remove to set it to the number of cpu cores.
+          "
+
+  $core.network.lb:
+    glitchtip_lb:
+      project_id: "12345678-c625-4fee-81d5-f691897b8142"
+      type:
+        kind: core
+        ram: 1024
+        cpu: 2
+  $core.network.lb.$glitchtip_lb.backend_pools:
+    glitchtip_backend_https:
+      project_id: "12345678-c625-4fee-81d5-f691897b8142"
+      parent: $core.network.lb.$glitchtip_lb:uuid
+      endpoints:
+        - kind: host
+          host: $core.compute.nodes.$genesis_glitchtip:default_network:ipv4
+          port: 443
+  $core.network.lb.$glitchtip_lb.vhosts:
+    glitchtip_http:
+      project_id: "12345678-c625-4fee-81d5-f691897b8142"
+      parent: $core.network.lb.$glitchtip_lb:uuid
+      domains:
+        - f"glitchtip.{$glitchtip.imports.$core_public_domain:name}"
+        - f"www.glitchtip.{$glitchtip.imports.$core_public_domain:name}"
+      protocol: http
+      port: 80
+    glitchtip_https:
+      project_id: "12345678-c625-4fee-81d5-f691897b8142"
+      parent: $core.network.lb.$glitchtip_lb:uuid
+      domains:
+        - f"glitchtip.{$glitchtip.imports.$core_public_domain:name}"
+        - f"www.glitchtip.{$glitchtip.imports.$core_public_domain:name}"
+      protocol: https
+      port: 443
+      cert:
+        kind: raw
+        crt: $core.secret.certificates.glitchtip_cert:cert
+        key: $core.secret.certificates.glitchtip_cert:key
+  $core.network.lb.$glitchtip_lb.vhosts.$glitchtip_http.routes:
+    glitchtip_http_route:
+      project_id: "12345678-c625-4fee-81d5-f691897b8142"
+      parent: $core.network.lb.$glitchtip_lb.vhosts.$glitchtip_http:uuid
+      condition:
+        kind: prefix
+        value: /
+        actions:
+          - kind: redirect
+            url: f"https://glitchtip.{$glitchtip.imports.$core_public_domain:name}"
+  $core.network.lb.$glitchtip_lb.vhosts.$glitchtip_https.routes:
+    glitchtip_https_route:
+      project_id: "12345678-c625-4fee-81d5-f691897b8142"
+      parent: $core.network.lb.$glitchtip_lb.vhosts.$glitchtip_https:uuid
+      condition:
+        kind: prefix
+        value: /
+        actions:
+          - kind: backend
+            pool: $core.network.lb.$glitchtip_lb.backend_pools.$glitchtip_backend_https:uuid
+            protocol:
+              kind: https
+              verify: false
+  $glitchtip.imports.$core_public_domain.records:
+    glitchtip_a_record:
+      domain: "$glitchtip.imports.$core_public_domain:uuid"
+      project_id: "12345678-c625-4fee-81d5-f691897b8142"
+      type: "A"
+      record:
+        kind: "A"
+        name: "glitchtip"
+        address: "$core.network.lb.$glitchtip_lb:index(ipsv4, 0)"
+  $core.secret.certificates:
+    glitchtip_cert:
+      name: glitchtip_cert
+      project_id: "12345678-c625-4fee-81d5-f691897b8142"
+      email: user@geneis-core.tech
+      domains:
+        f"glitchtip.{$glitchtip.imports.$core_public_domain:name}"
+        f"*.glitchtip.{$glitchtip.imports.$core_public_domain:name}"

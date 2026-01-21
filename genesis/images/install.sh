@@ -45,7 +45,4 @@ sudo systemctl enable docker
 
 
 cd $GC_PATH
-docker compose up -d
-
-
-# Now you can register first user via web.
+docker compose build
