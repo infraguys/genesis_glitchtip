@@ -1,6 +1,6 @@
 x-depends_on: &default-depends_on
   - postgres
-  - redis
+  - valkey
 
 services:
   postgres:
@@ -10,14 +10,14 @@ services:
     restart: unless-stopped
     volumes:
       - pg-data:/var/lib/postgresql/data
-  redis:
+  valkey: # Optional, but offers better performance. Remove and set VALKEY_URL to disable.
     image: valkey/valkey
     restart: unless-stopped
   web:
     image: glitchtip/glitchtip
     depends_on: *default-depends_on
     ports:
-      - "80:80"
+      - "8000:8000"
     env_file: /etc/default/glitchtip.env
     restart: unless-stopped
     volumes:
