@@ -8,6 +8,12 @@ build:
       # Local path
       path:
         src: ../../genesis_glitchtip
+      exclude:
+        - .github
+        - .gitignore
+        - .venv
+        - output
+        - var
     - dst: /var/lib/genesis/bootstrap/scripts/00-glitchtip-bootstrap.sh
       path:
         src: ./images/bootstrap.sh

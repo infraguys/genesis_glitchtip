@@ -22,6 +22,10 @@ set -o pipefail
 
 GC_PATH="/opt/genesis_glitchtip"
 
+# Security purposes
+cp ${GC_PATH}/etc/profile.d/autologout.sh /etc/profile.d/
+cp ${GC_PATH}/etc/ssh/sshd_config.d/99-glitchtip.conf /etc/ssh/sshd_config.d/
+
 # Add Docker's official GPG key:
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl

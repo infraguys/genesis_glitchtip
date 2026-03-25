@@ -16,7 +16,14 @@ resources:
       constructor:
         kind: plain
       method: AUTO_HEX
-  
+
+    genesis_glitchtip_postgres_pass:
+      name: "glitchtip_postgres_pass"
+      project_id: "12345678-c625-4fee-81d5-f691897b8142"
+      constructor:
+        kind: plain
+      method: AUTO_HEX
+
   $core.compute.nodes:
     genesis_glitchtip:
       name: "glitchtip"
@@ -39,7 +46,7 @@ resources:
         kind: text
         content: |
           f"
-          DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres
+          DATABASE_URL=postgres://postgres:{$core.secret.passwords.$genesis_glitchtip_postgres_pass:value}@postgres:5432/postgres
           VALKEY_URL=redis://valkey:6379
           SECRET_KEY={$core.secret.passwords.$genesis_glitchtip_pass:value}
           PORT=8000 # If changing, change the web service port too
@@ -50,4 +57,17 @@ resources:
           ENABLE_ORGANIZATION_CREATION=false
           ENABLE_USER_REGISTRATION=false
           ENABLE_SOCIAL_APPS_USER_REGISTRATION=true
+          "
+
+    genesis_glitchtip_postgres_config:
+      project_id: "12345678-c625-4fee-81d5-f691897b8142"
+      path: /etc/default/glitchtip-postgres.env
+      target:
+        kind: node
+        node: $core.compute.nodes.$genesis_glitchtip:uuid
+      body:
+        kind: text
+        content: |
+          f"
+          POSTGRES_PASSWORD={$core.secret.passwords.$genesis_glitchtip_postgres_pass:value}
           "
