@@ -24,6 +24,9 @@ set -o pipefail
 
 GC_PATH="/opt/genesis_glitchtip"
 
+echo "Waiting for /etc/default/glitchtip-postgres.env..."
+while [ ! -f /etc/default/glitchtip-postgres.env ]; do sleep 1; done
+
 echo "Waiting for /etc/default/glitchtip.env..."
 while [ ! -f /etc/default/glitchtip.env ]; do sleep 1; done
 
