@@ -1,0 +1,41 @@
+# Build section. It specifies the build process of the project
+build:
+
+  # Dependencies of the project
+  deps:
+      # Target path in the image
+    - dst: /opt/genesis_glitchtip
+      # Local path
+      path:
+        src: ../../genesis_glitchtip
+      exclude:
+        - .github
+        - .gitignore
+        - .venv
+        - output
+        - var
+    - dst: /var/lib/genesis/bootstrap/scripts/00-glitchtip-bootstrap.sh
+      path:
+        src: ./images/bootstrap.sh
+
+  # List of elements in the project
+  elements:
+    # List of images in the element
+    - manifest: manifests/glitchtip-local.yaml.j2
+      images:
+      - name: genesis-glitchtip
+        format: gz
+
+        # OS profile for the image
+        profile: genesis_base
+
+        # Provisioning script
+        script: images/install.sh
+
+        override:
+          disk_size: "6g"
+
+push:
+  local:
+    driver: fs
+    path: /var/lib/genesis-pools/http

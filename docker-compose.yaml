@@ -1,0 +1,59 @@
+x-depends_on: &default-depends_on
+  - postgres
+  - valkey
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    env_file: /etc/default/glitchtip-postgres.env
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    networks:
+      glitchtip-net: {}
+  valkey: # Optional, but offers better performance. Remove and set VALKEY_URL to disable.
+    image: valkey/valkey
+    restart: unless-stopped
+    networks:
+      glitchtip-net: {}
+  web:
+    image: glitchtip/glitchtip
+    depends_on: *default-depends_on
+    ports:
+      - "8000:8000"
+    env_file:
+      - /etc/default/glitchtip-postgres.env
+      - /etc/default/glitchtip.env
+    restart: unless-stopped
+    volumes:
+      - uploads:/code/uploads
+    networks:
+      glitchtip-net: {}
+  worker:
+    image: glitchtip/glitchtip
+    command: ./bin/run-celery-with-beat.sh
+    depends_on: *default-depends_on
+    env_file:
+      - /etc/default/glitchtip-postgres.env
+      - /etc/default/glitchtip.env
+    restart: unless-stopped
+    volumes:
+      - uploads:/code/uploads
+    networks:
+      glitchtip-net: {}
+  migrate:
+    image: glitchtip/glitchtip
+    depends_on: *default-depends_on
+    command: ./bin/run-migrate.sh
+    env_file:
+      - /etc/default/glitchtip-postgres.env
+      - /etc/default/glitchtip.env
+    networks:
+      glitchtip-net: {}
+
+volumes:
+  pg-data:
+  uploads:
+
+networks:
+  glitchtip-net: {}
